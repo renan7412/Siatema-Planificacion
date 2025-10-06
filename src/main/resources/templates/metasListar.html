@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Listado de metas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">Gestión de Metas</h2>
+
+        <a href="/metas/crear" class="btn btn-success mb-3">Crear Nueva Meta</a>
+
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Responsable</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="meta : ${metas}">
+                <td th:text="${meta.id}">1</td>
+                <td th:text="${meta.nombre}">Nombre</td>
+                <td th:text="${meta.descripcion}">Descripción</td>
+                <td th:text="${meta.responsable}">Responsable</td>
+                <td th:text="${meta.estado}">Estado</td>
+                <td>
+                    <a th:href="@{/metas/editar/{id}(id=${meta.id})}" class="btn btn-primary btn-sm">Editar</a>
+                    <a th:href="@{/metas/eliminar/{id}(id=${meta.id})}" class="btn btn-danger btn-sm"
+                   onclick="return confirm('¿Estás seguro de eliminar esta meta?')">Eliminar</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

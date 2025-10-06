@@ -1,0 +1,2295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Panel de Usuarios | Planificación Pública</title>
+    <style>
+        body {font-family: Arial, sans-serif; background-color: #81cfd9; padding: 30px; }
+        h2 { margin-bottom: 20px; }
+        .usuario { background: #fff; padding: 15px; margin-bottom: 12px; border-radius: 8px;
+                    box-shadow: 0 0 5px #ccc; }
+        .acciones button { margin-right: 10px; padding: 5px 10px; }
+        /*.logout {   background-color: #d9534f; color: white; border: none;
+                    padding: 10px 20px; margin-top: 30px; cursor: pointer; }
+        .error {    color: red; margin-top: 15px; }*/
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+<!-- Modal para listar usuarios -->
+<div id="elemento-de-bienvenida">
+    <h2>¡Hola! Bienvenido a tu Dashboard</h2>
+</div>
+<div class="usuario">Hola, soy el usuario administrador</div>
+<button id="openUsuariosModalBtn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#usuariosModal">Gestionar Usuarios</button>
+<div id="usuariosModal" class="modal fade" tabindex="-1" aria-labelledby="usuariosModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="usuariosModalLabel">Listado de Usuarios</h5>
+                <button type="button" class="btn-close close-btn" data-bs-dismiss="modal" aria-label="cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Nombre</th>
+                            <th>Apellido</th>
+                            <th>Email</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usuariosContainer"></tbody>
+                </table>
+                <div id="errorMsg" class="alert alert-danger mt-2" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear a un usuario -->
+<div class="modal fade" id="crearModal" tabindex="-1" aria-labelledby="crearModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="crearModalLabel">Crear Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="abrirModalCrear()"></button>
+            </div>
+            <div class="modal-body">
+                <form id="crearForm">
+                    <div class="mb-3">
+                        <label for="crearUsername">Username</label>
+                        <input type="text" class="form-control" id="crearUsername" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="crearNombre">Nombre:</label>
+                        <input type="text" class="form-control" id="crearNombre" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="crearApellido">Apellido</label>
+                        <input type="text" class="form-control" id="crearApellido" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="crearEmail">Email</label>
+                        <input type="email" class="form-control" id="crearEmail" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="crearPassword">Contraseña</label>
+                        <input type="password" class="form-control" id="crearPassword" required/>
+                    </div>
+                    <button type="submit" class="btn btn-success">Guardar Usuario</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar usuario -->
+<div class="modal fade" id="editarModal" tabindex="-1" aria-labelledby="editarUsuarioModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editarUsuarioModalLabel">Editar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editarForm">
+                    <input type="hidden" id="editId"/>
+                    <div class="mb-3">
+                        <label for="editNombre" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="editNombre" autocomplete="given-name"/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editApellido" class="form-label">Apellido</label>
+                        <input type="text" class="form-control" id="editApellido" autocomplete="family-name"/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="editEmail" autocomplete="email"/>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="guardarCambiosBtn">Guardar Cambios</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para confirmar eliminación de usuario-->
+<br>
+<div class="modal fade" id="eliminarModal" tabindex="-1" aria-labelledby="eliminarModalLabel" aria-hidden="true" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title h5" id="eliminarModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p id="eliminarMensaje">
+                    ¿Estás seguro de que deseas eliminar al usuario?<strong id="usuarioEliminarNombre"></strong>?
+                </p>
+                <input type="hidden" id="usuarioEliminarId" name="usuarioEliminarId" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-describedby="eliminarMensaje">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmarEliminacion()" aria-describedby="eliminarMensaje">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para LISTAR PROYECTOS -->
+<br>
+<button id="openProyectosModalBtn" class="btn btn-primary" >Gestionar Proyectos</button>   <!-- data-bs-target="#proyectosModal" data-bs-toggle="modal" -->
+<div id="proyectosModal" class="modal fade" tabindex="-1" aria-labelledby="proyectosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="proyectosModalLabel">Listado de Proyectos Inversión</h5>
+                <button type="button" class="btn-close close-btn" data-bs-dismiss="modal" aria-label="cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tipo</th>
+                        <th>Entidad</th>
+                        <th>Nombre</th>
+                        <th>Presupuesto</th>
+                        <th>Descripción</th>
+                        <th>Objetivo Id</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="proyectosContainer"></tbody>
+                </table>
+                <div id="mensajeProyectos" class="text-center text-muted mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear a un PROYECTO -->
+<br>
+<div class="modal fade" id="crearProyectoModal" tabindex="-1" aria-labelledby="crearProyectoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="crearProyectoForm" class="modal-control">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="crearProyectoLabel">Crear Nuevo Proyecto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="crearTipo" class="form-label">Tipo</label>
+                    <input type="text" class="form-control" id="crearTipo" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="crearEntidad" class="form-label">Entidad</label>
+                    <input type="text" class="form-control" id="crearEntidad" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="crearNombreProyecto" class="form-label">Nombre del Proyecto</label>
+                    <input type="text" class="form-control" id="crearNombreProyecto" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="crearPresupuestoProyecto" class="form-label">Presupuesto</label>
+                    <input type="number" class="form-control" id="crearPresupuestoProyecto" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="crearDescripcionProyecto" class="form-label">Descripción</label>
+                    <input type="text" class="form-control" id="crearDescripcionProyecto" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="crearObjetivoEstrategicoId" class="form-label">Objetivo</label>
+                    <!-- <input type="number" class="form-control" id="crearObjetivo" required/> -->
+                    <select id="crearObjetivoEstrategicoId" class="form-control" required>
+                        <option value="">Seleccione un objetivo</option>
+                        <option value="1">Objetivo 1</option>
+                        <option value="2">Objetivo 2</option>
+                        <!-- dinámicamente con JS -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Guardar Proyecto</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Modal para EDITAR UN PROYECTO -->
+<br>
+<div class="modal fade" id="editarProyectoModal" tabindex="-1" aria-labelledby="editarProyectoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editarProyectoModalLabel">Editar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editarProyectoForm">
+                    <input type="hidden" id="editProyectoId" name="id"/>
+
+                    <div class="mb-3">
+                        <label for="editTipo" class="form-label">Tipo</label>
+                        <input type="text" class="form-control" id="editTipo" name="tipo" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editEntidad" class="form-label">Entidad</label>
+                        <input type="text" class="form-control" id="editEntidad" name="entidad" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editNombreProyecto" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="editNombreProyecto" name="nombreProyecto"
+                               required/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPresupuestoProyecto" class="form-label">Presupuesto</label>
+                        <input type="number" class="form-control" id="editPresupuestoProyecto" name="presupuestoProyecto" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editDescripcionProyecto" class="form-label">Descripción</label>
+                        <input type="text" class="form-control" id="editDescripcionProyecto" name="descripcionProyecto" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editObjetivoEstrategicoId" class="form-label">Objetivo</label>
+                        <input type="text" class="form-control" id="editObjetivoEstrategicoId" name="objetivoEstrategicoId" required/>
+                    </div>
+
+                    <div class="modal-footer"></div>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para confirmar la ELIMINACIÓN DE UN PROYECTO -->
+<br>
+<div class="modal fade" id="eliminarProyectoModal" tabindex="-1" aria-labelledby="eliminarProyectoModalLabel" aria-hidden="true" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title h5" id="eliminarProyectoModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p id="eliminarMensajeP">
+                    ¿Estás seguro de que deseas eliminar el Proyecto¿<strong id="eliminarNombreProyecto"></strong>?
+                </p>
+                <p class="text-danger small">Esta acción no se puede deshacer.</p>
+
+                <input type="hidden" id="eliminarProyectoId" name="eliminarProyectoId" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-describedby="eliminarMensaje">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="eliminarProyectoModal()" aria-describedby="eliminarMensaje">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para listar Planes -->
+<br>
+<button id="openPlanesModalBtn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#planesModal">Gestionar Planes</button>
+<div class="modal fade" id="planesModal" tabindex="-1" aria-labelledby="modalPlanesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalPlanesLabel">Planes Institucionales</h5>
+                <button type="button" class="btn-close close-btn" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <table class="table table-striped table-bordered align-middle" id="planesTable">
+                    <thead class="table-dark text-center">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Usuario ID</th>
+                        <th>Vigencia</th>
+                        <th>Cronograma Inicio</th>
+                        <th>Cronograma Fin</th>
+                        <th>Activo</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody > <!-- id="planes container" -->
+                    <!-- Se llenará dinámicamente -->
+                    </tbody>
+                </table>
+                <!-- <div id="errorMsgPlan" class="alert alert-danger mt-2" style="display: none;"></div> -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Crear un Plan -->
+<div class="modal fade" id="crearPlanModal" tabindex="-1" aria-labelledby="crearPlanLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="crearPlanForm" class="modal-control">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="crearPlanLabel">Crear Nuevo Plan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="crearNombrePlan" class="form-label">Nombre del Plan</label>
+                    <input type="text" class="form-control" id="crearNombrePlan" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="crearPlanUsuarioId" class="form-label">Usuario ID</label>
+                    <input type="text" class="form-control" id="crearPlanUsuarioId" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="crearPlanVigencia" class="form-label">Vigencia</label>
+                    <input type="number" class="form-control" id="crearPlanVigencia" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="crearPlanCronogramaInicio" class="form-label">Cronograma Inicio</label>
+                    <input type="date" class="form-control" id="crearPlanCronogramaInicio" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="crearPlanCronogramaFin" class="form-label">Cronograma Fin</label>
+                    <input type="date" class="form-control" id="crearPlanCronogramaFin" required/>
+                </div>
+                <div class="mb-3 form-check">
+                    <label class="form-check-label" for="crearPlanActivo">Activo</label>
+                    <input class="form-check-input" type="checkbox" id="crearPlanActivo"/>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Guardar Plan</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para editar un plan //editarPlanModal -->
+<div class="modal fade" id="editarPlanModal" tabindex="-1" aria-labelledby="editarPlanModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editarPlanModalLabel">Editar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editarPlanForm">
+                    <input type="hidden" id="editIdPlan" name="id"/>
+                    <div class="mb-3">
+                        <label for="editNombrePlan" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="editNombrePlan"/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editUsuarioId" class="form-label">Usuario id</label>
+                        <input type="number" class="form-control" id="editUsuarioId" name="usuario_id" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editVigencia" class="form-label">Vigencia</label>
+                        <input type="number" class="form-control" id="editVigencia" name="vigencia" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCronogramaInicio" class="form-label">Cronograma inicio</label>
+                        <input type="date" class="form-control" id="editCronogramaInicio" name="cronograma_inicio"
+                               required/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCronogramaFin" class="form-label">Cronograma fin</label>
+                        <input type="date" class="form-control" id="editCronogramaFin" name="cronogramaFin" required/>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <label class="form-check-label" for="editActivo">Activo</label>
+                        <input type="checkbox" class="form-check-input" id="editActivo" name="activo">
+                    </div>
+                    <div class="modal-footer"></div>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para eliminar un Plan -->
+<div class="modal fade" id="eliminarPlanModal" tabindex="-1" aria-labelledby="eliminarPlanModalLabel"
+    aria-hidden="true">
+   <div class="modal-dialog modal-dialog-centered">
+       <div class="modal-content border-0 shadow-lg">
+           <div class="modal-header bg-danger text-white border-bottom-0">
+               <h5 class="modal-title" id="eliminarPlanModalLabel">Confirmar Eliminación</h5>
+               <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                       aria-label="Cerrar"></button>
+           </div>
+           <div class="modal-body text-center">
+               <div class="mb-3">
+                   <i class="bi bi-exclamation-triangle-fill text-danger fs-2"></i>
+               </div>
+               <p>¿Estás seguro de que deseas eliminar el plan?<strong id="nombrePlanEliminar"></strong>?</p>
+               <p class="text-danger small">Esta acción no se puede deshacer.</p>
+               <input type="hidden" id="idPlanEliminar"/>
+           </div>
+           <div class="modal-footer justify-content-center border-top-0">
+               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+               <button type="button" class="btn btn-danger" id="confirmarPlanEliminarBtn">
+                        <i class="bi bi-trash"></i>Eliminar
+               </button>
+           </div>
+       </div>
+   </div>
+</div>
+
+<!-- Modal para LISTAR OBJETIVOS -->
+<br>
+<button id="openObjetivosModalBtn" class="btn btn-primary" data-bs-target="#objetivosModal" data-bs-toggle="modal">Gestion Objetivos</button>
+<div id="objetivosModal" class="modal fade" tabindex="-1" aria-labelledby="objetivosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="objetivosModalLabel">Listado de Objetivos Estratégicos</h5>
+                <button type="button" class="btn-close close-btn" data-bs-dismiss="modal" aria-label="cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>Descripción</th>
+                        <th>Plan Id</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="objetivosContainer"></tbody>
+                </table>
+                <div id="mensajeObjetivos" class="text-center text-muted mt-3"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear a un OBJETIVO -->
+<br>
+<div class="modal fade" id="crearObjetivoModal" tabindex="-1" aria-labelledby="crearObjetivoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="crearObjetivoForm" class="modal-control">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="crearObjetivoLabel">Crear Nuevo Objetivo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="crearFecha" class="form-label">Fecha</label>
+                    <input type="Date" class="form-control" id="crearFecha" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="crearIdPlanO" class="form-label">Plan Id</label>
+                    <input type="number" class="form-control" id="crearIdPlanO" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="crearCodigoProyecto" class="form-label">Proyecto Id</label>
+                    <input type="number" class="form-control" id="crearCodigoProyecto" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="crearDescripcionObjetivos" class="form-label">Descripción</label>
+                    <input type="text" class="form-control" id="crearDescripcionObjetivos" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="crearEstadoObjetivo" class="form-label">Estado</label>
+                    <input type="text" class="form-control" id="crearEstadoObjetivo" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="crearNombreObjetivos" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="crearNombreObjetivos" required/>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Guardar Objetivo</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para EDITAR UN OBJETIVO -->
+<br>
+<div class="modal fade" id="editarObjetivoModal" tabindex="-1" aria-labelledby="editarObjetivoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editarObjetivoModalLabel">Editar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editarObjetivoForm">
+                    <input type="hidden" id="editIdObjetivo" name="id"/>
+
+                    <div class="mb-3">
+                        <label for="editFecha" class="form-label">Fecha</label>
+                        <input type="Date" class="form-control" id="editFecha" name="fecha" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editIdPlanO" class="form-label">Plan id</label>
+                        <input type="number" class="form-control" id="editIdPlanO" name="Plan" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCodigoProyecto" class="form-label">Código Proyecto</label>
+                        <input type="number" class="form-control" id="editCodigoProyecto" name="codigoProyecto"
+                               required/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editDescripcionObjetivos" class="form-label">Descripción</label>
+                        <input type="text" class="form-control" id="editDescripcionObjetivos" name="descripcionObjetivos" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editEstadoObjetivo" class="form-label">Estado</label>
+                        <input type="text" class="form-control" id="editEstadoObjetivo" name="estadoObjetivo" required/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editNombreObjetivos" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="editNombreObjetivos" name="nombreObjetivo" required/>
+                    </div>
+                    <div class="modal-footer"></div>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para confirmar ELIMINACIÓN DE UN OBJETIVO -->
+<br>
+<div class="modal fade" id="eliminarObjetivoModal" tabindex="-1" aria-labelledby="eliminarObjetivoModalLabel" aria-hidden="true" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title h5" id="eliminarObjetivoModalLabel">Confirmar Su Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p id="eliminarMensajeO">
+                    ¿Estás seguro de que deseas eliminar el Objetivo¿<strong id="eliminarNombreObjetivos"></strong>?
+                </p>
+                <p class="text-danger small">Esta acción no se puede deshacer.</p>
+
+                <input type="hidden" id="eliminarIdObjetivo" name="eliminarIdObjetivo" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-describedby="eliminarMensaje">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="eliminarObjetivoModal()" aria-describedby="eliminarMensaje">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para listar Metas -->
+<br>
+<button id="openMetasModalBtn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#metasModal">Gestionar Metas</button>
+<div id="metasModal" class="modal fade" tabindex="-1" aria-labelledby="metasModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="metasModalLabel">Listado de Metas</h5>
+                <button type="button" class="btn-close close-btn" data-bs-dismiss="modal" aria-label="cerrar"></button>
+            </div>
+            <div class="modal-body style=max-height: 70vh; overflow-y: auto;">
+                <table id="metasTable" class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Plan ID</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Responsable</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="metasContainer"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear Meta -->
+<div class="modal fade" id="crearMetaModal" tabindex="-1" aria-labelledby="crearMetaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="crearMetaForm" class="modal-control">
+            <div class="modal-header">
+                <h5 class="modal-title" id="crearMetaLabel">Crear Nueva Meta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="idPlan" class="form-label">Plan institucional</label>
+                    <select id="idPlan" class="form-select" required>
+                        <option value="">Seleccione un plan</option>
+                        <!-- <option value="1">Plan de mejora (DO)</option>
+                        <option value="2">Mejora del barrio</option> -->
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="crearNombreMeta" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="crearNombreMeta" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="crearDescripcion" class="form-label">Descripción</label>
+                    <textarea class="form-control" id="crearDescripcion" rows="3" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="crearResponsable" class="form-label">Responsable</label>
+                    <input type="text" class="form-control" id="crearResponsable" required/>
+                </div>
+                <div class="mb-3">
+                    <label for="estado" class="form-label">Estado</label>
+                    <select id="estado" class="form-select" required>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="en_proceso">En proceso</option>
+                        <option value="cumplido">Cumplido</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para Editar Meta -->
+<div class="modal fade" id="editarMetaModal" tabindex="-1" aria-labelledby="editarMetaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form id="editarMetaForm" class="modal-content needs-validation" novalidate>
+            <div class="modal-header">
+                <h5 class="modal-title" id="editarMetaModalLabel">Editar Meta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editarMetaId">
+                <div class="mb-3">
+                    <label for="editarIdPlan" class="form-label">Plan</label>
+                    <select id="editarIdPlan" class="form-select" required>
+                        <option value="" disabled selected>Seleccione un plan...</option>
+                    </select>
+                    <div class="invalid-feedback">Debe seleccionar un plan</div>
+                </div>
+                <div class="mb-3">
+                    <label for="editarNombreMeta" class="form-label">Nombre</label>
+                    <input type="text" id="editarNombreMeta" class="form-control" required/>
+                    <div class="invalid-feedback">El nombre es obligatorio</div>
+                </div>
+                <div class="mb-3">
+                    <label for="editarDescripcionMeta" class="form-label">Descripción</label>
+                    <textarea id="editarDescripcionMeta" class="form-control"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="editarResponsableMeta" class="form-label">Responsable</label>
+                    <input type="text" id="editarResponsableMeta" class="form-control"/>
+                </div>
+                <div class="mb-3">
+                    <label for="editarEstado" class="form-label">Estado</label>
+                    <select id="editarEstado" class="form-select" required>
+                        <option value="" disabled selected>Seleccione un estado...</option>
+                        <option value="PENDIENTE">Pendiente</option>
+                        <option value="EN_PROCESO">En proceso</option>
+                        <option value="CUMPLIDO">Cumplido</option>
+                    </select>
+                    <div class="invalid-feedback">Debe seleccionar un estado</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-success">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para confirmar eliminación de una Meta -->
+<br>
+<div class="modal fade" id="eliminarMetaModal" tabindex="-1" aria-labelledby="eliminarMetaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white border-bottom-0">
+                <h5 class="modal-title" id="eliminarMetaModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Cerrar">
+                </button>
+            </div>
+            <div class="modal-body text-center" id="eliminarMetaModalDesc">
+                <div class="mb-3">
+                    <i class="bi bi-exclamation-triangle-fill text-danger fs-2"></i>
+                </div>
+                <p>¿Estás seguro de que deseas eliminar esta meta?<strong id="metaEliminarNombre"></strong>?</p>
+                <p class="text-danger small">Esta acción no se puede deshacer.</p>
+                <input type="hidden" id="metaEliminarId" />
+            </div>
+            <div class="modal-footer justify-content-center border-top-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button"  id="confirmarMetaEliminarBtn" class="btn btn-danger d-none" onclick="abrirMetaModalEliminar(1)">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<br>
+<!-- <button class="logout" onclick="cerrarSesion()">Cerrar Sesión</button> -->
+<script>
+    const API = "http://localhost:8080";
+    const token = localStorage.getItem("jwtToken");
+    if (!token || token.split(".").length !== 3) {
+        alert("Token inválido. Por favor, Inicie sesión nuevamente.");
+        localStorage.removeItem("jwtToken");
+        window.location.href = "Index.html";
+    }
+
+    async function obtenerRoles() {
+        try {
+            const res = await fetch(`${API}/auth/me`, {
+                headers: {"Authorization": `Bearer ${token}`}
+            })
+
+            if (!res.ok) {
+                const msg = await res.text();
+                throw new Error("fallo la petición: " + res.status + " - " + msg);
+            }
+
+            const data = await res.json();
+            //console.log("Respuesta/auth/me:", data); // **
+            return data.roles || [];
+
+        } catch (e) {
+            console.error("Error al obtener roles:", e);
+            return [];
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const res = await fetch(`${API}/auth/me`, {
+            headers: {"Authorization": `Bearer ${token}`}
+        });
+        const data = await res.json();
+        const nombre = data.username || "Usuario";
+        mostrarBienvenida(nombre); // Llamamos al cargar la página
+
+        const openUsuariosModalBtn = document.getElementById('openUsuariosModalBtn');
+        if (openUsuariosModalBtn) {
+            openUsuariosModalBtn.addEventListener('click', cargarUsuarios);
+        } else {
+            console.error("Botón 'Gestión Usuarios' no encontrado.");
+        }
+    });
+
+    async function mostrarBienvenida(nombre) {
+        const elementoBienvenida = document.querySelector('#elemento-de-bienvenida');
+        if(elementoBienvenida){
+            elementoBienvenida.textContent = `Bienvenido, ${nombre}`;
+        } else {
+            console.error("Error: elemento para mostrar la bienvenida no encontrado.");
+        }
+    }
+
+    async function cargarUsuarios() {
+        const roles = await obtenerRoles();
+        if (!Array.isArray(roles)) {
+            console.error("Roles no es un array:", roles);
+            return;
+        }
+
+        const esAdmin = roles.includes("ADMIN") || roles.includes("ROLE_ADMIN");
+        if (!esAdmin) {
+            console.warn("Usted no esta autorizado para ver usuarios");
+            document.getElementById("usuariosContainer").innerHTML = "<p>No tiene permisos para ver los usuarios.</p>";
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API}/api/usuarios/todos`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+
+            const errorMsg = document.getElementById("errorMsg");
+            const container = document.getElementById("usuariosContainer");
+            if (!res.ok) {
+                const msg = await res.text();
+                errorMsg.textContent = "Error al obtener usuarios: " + msg;
+                container.innerHTML = "";
+                return;
+            }
+
+            const usuarios = await res.json();
+            container.innerHTML = "";
+
+            if (usuarios.length === 0) {
+                container.innerHTML = "<p>No existen usuarios registrados.</p>";
+                return;
+            }
+
+            usuarios.forEach(u => {
+                if (u.username && u.nombre && u.apellido && u.email) {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${u.username}</td>
+                        <td>${u.nombre}</td>
+                        <td>${u.apellido}</td>
+                        <td>${u.email}</td>
+                        <td>
+                            ${esAdmin ? `
+                            <button class="btn btn-sm btn-warning"  onclick="abrirModalEditar(${u.id})">Editar</button>
+                            <button class="btn btn-sm btn-danger" onclick="abrirModalEliminar(${u.id}, '${u.nombre}')">Eliminar</button>
+                            ` : ``}
+                        </td>
+                    `;
+                    container.appendChild(tr);
+                }
+            });
+        } catch (error) {
+            error.textContent = "Error al cargar usuarios.";
+            console.error("Error:", error);
+        }
+    }
+
+    // Listener para crear un Usuario
+    document.getElementById("crearForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const username = document.getElementById("crearUsername").value;
+        const nombre = document.getElementById("crearNombre").value;
+        const apellido = document.getElementById("crearApellido").value;
+        const email = document.getElementById("crearEmail").value;
+        const password = document.getElementById("crearPassword").value;
+
+        const res = await fetch(`${API}/api/usuarios/crear`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({username, nombre, apellido, email, password, roles: ["USER"]})
+        });
+
+        if (res.ok) {
+            alert("Usuario creado de forma correcta");
+            bootstrap.Modal.getInstance(document.getElementById("crearModal")).hide();
+            document.getElementById("crearForm").reset(); // Limpia los campos después del submit
+            cargarUsuarios();
+        } else {
+            const msg = await res.text();
+            alert("Error al crear el usuario: " + msg);
+        }
+    });
+
+    // Listener para editar a un usuario existente
+    const editarUsuarioModal = document.getElementById('editarForm');
+    editarUsuarioModal.addEventListener('show.bs.modal', function (event) {
+        //const button = event.relatedTarget;
+        //const id = button.getAttribute('data-id');
+        //document.getElementById("editUsuarioId").value = id;
+    });
+
+    async function abrirModalEditar(id) {
+        try {
+            const res = await fetch(`${API}/api/usuarios/${id}`, {
+                headers: {"Authorization": `Bearer ${token}`}
+            });
+
+            if (!res.ok) {
+                alert("No se puede cargar el usuario");
+                return;
+            }
+
+            const usuario = await res.json();
+            document.getElementById("editId").value = usuario.id;
+            document.getElementById("editNombre").value = usuario.nombre;
+            document.getElementById("editApellido").value = usuario.apellido;
+            document.getElementById("editEmail").value = usuario.email;
+
+            // Mostrar el modal
+            new bootstrap.Modal(document.getElementById("editarModal")).show();
+        } catch (error){
+            alert("Error al cargar el usuario");
+            console.error(error);
+        }
+    }
+    // submit
+    document.getElementById("editarForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const id = document.getElementById("editId").value;
+        const nombre = document.getElementById("editNombre").value;
+        const apellido = document.getElementById("editApellido").value;
+        const email = document.getElementById("editEmail").value;
+
+        const res = await fetch(`${API}/api/usuarios/${id}`, {
+            method: "PUT",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ nombre, apellido, email })
+        });
+
+        if (res.ok) {
+            alert("Usuario actualizado");
+            bootstrap.Modal.getInstance(document.getElementById("editarUsuarioModal")).hide();
+            cargarUsuarios();
+        } else {
+            alert("Error al actualizar");
+        }
+    });
+
+    // Función para eliminar a un usuario
+    function abrirModalEliminar(id, nombre) {
+        document.getElementById("usuarioEliminarId").value = id;
+        document.getElementById("usuarioEliminarNombre").textContent = nombre;
+        new bootstrap.Modal(document.getElementById("eliminarModal")).show();
+    }
+
+    async function confirmarEliminacion() {
+        const id = document.getElementById("usuarioEliminarId").value;
+
+        try {
+            const res = await fetch(`${API}/api/usuarios/${id}`, {
+                method: "DELETE",
+                headers: {"Authorization": `Bearer ${token}`}
+            });
+
+            if (res.ok) {
+                alert("Usuario eliminado correctamente");
+                bootstrap.Modal.getInstance(document.getElementById("eliminarModal")).hide();
+                cargarUsuarios(); // Se recarga la lista
+            } else {
+                const msg = await res.text();
+                alert("Error al eliminar: " + msg);
+            }
+        } catch (err) {
+            console.error("Error al eliminar: " + err);
+            alert("Error de conexión");
+        }
+    }
+    // Init
+    /*if (!token) {
+        window.location.href = "/index.html";
+    } else {
+        cargarUsuarios();
+    }*/
+    // Listener para LISTAR PROYECTOS // ********
+    document.getElementById('openProyectosModalBtn').addEventListener('click', () => {
+        const modalElement = document.getElementById('proyectosModal');
+        const modal = new bootstrap.Modal(modalElement);
+        cargarProyectosIn();
+        modal.show();
+    });
+
+    // Cargar proyectos desde la API
+    async function cargarProyectosIn() {
+        const tbody = document.querySelector('#proyectosContainer');
+        const mensaje = document.getElementById('mensajeProyectos');
+        tbody.innerHTML = '';
+        mensaje.textContent = 'Cargando proyectos....';
+        // let container;
+
+        const token = localStorage.getItem("jwtToken");
+
+        if (!token || !token.includes('.') || token.split('.').length !== 3) {
+            mensaje.textContent = 'Sesión invalida. Por favor, inicia sesión nuevamente,';
+            console.warn("Token JWT inválido o malformado");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API}/api/proyecto/listar`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-type": "application/json"
+                }
+            });
+
+            if (res.status === 401) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">No autorizado</td></tr>`;
+                return;
+            }
+
+            if (!res.ok) {
+                console.error("Error al cargar proyectos: ", res.status);
+                mensaje.textContent = 'Error al cargar proyectos,';
+                return
+            }
+
+            const data = await res.json();
+            const proyectos = Array.isArray(data) ? data : data.content || [];
+
+            if (proyectos.length === 0) {
+                mensaje.textContent = 'No hay proyectos registrados.';
+                return;
+            }
+            mensaje.textContent = '';
+            renderizarProyectos(proyectos, tbody);
+
+        } catch (error) {
+            console.error("Error al cargar proyectos:", error);
+            mensaje.textContent = 'Error al cargar los datos.';
+        }
+    }
+    function renderizarProyectos(proyectos, tbody) {
+        // Se usa un fragmento de documento para mejorar el rendimiento
+        const fragment = document.createDocumentFragment();
+        const userRole = localStorage.getItem('userRole');
+        const esAdmin = userRole === "ADMIN";
+
+        proyectos.forEach(proyecto => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${proyecto.proyectoId}</td>
+                <td>${proyecto.tipo}</td>
+                <td>${proyecto.entidad}</td>
+                <td>${proyecto.nombreProyecto}</td>
+                <td>${proyecto.presupuestoProyecto }</td>
+                <td>${proyecto.descripcionProyecto}</td>
+                <td>${proyecto.objetivoEstrategicoId}</td>
+                <td>
+                    ${esAdmin ? `
+                        <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                            data-bs-target="#editarProyectoModal"
+                            data-proyecto-id="${proyecto.proyectoId}"
+                            data-nombre="${proyecto.nombreProyecto}">Editar</button>
+                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                            data-bs-target="#eliminarProyectoModal"
+                            data-id-proyecto="${proyecto.proyectoId}"
+                            data-nombre-proyecto="${proyecto.nombreProyecto}">
+                            <i class="bi bi-trash"></i>Eliminar</button>
+                    ` : '<span class="text-muted">Sin permisos</span>'}
+                </td>
+            `;
+            fragment.appendChild(tr);
+        });
+        tbody.appendChild(fragment);  // Agrega todas las filas de una vez al DOM
+    }
+
+    // Listener para CREAR UN PROYECTO
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const crearProyectoForm = document.getElementById('crearProyectoForm');
+        const crearProyectoModal = document.getElementById('crearProyectoModal');
+        const openCrearProyectoModalBtn = document.getElementById('openCrearProyectoModalBtn'); // Asegúrate de que este botón exista en tu HTML
+
+        // Evento para abrir el modal de creación de plan
+        if (openCrearProyectoModalBtn) {
+            openCrearProyectoModalBtn.addEventListener('click', () => {
+                cargarObjetivos();
+                new bootstrap.Modal(crearProyectoModal).show();
+            });
+        }
+        async function cargarObjetivos() { // ***
+            const token = localStorage.getItem('jwtToken');
+            try {
+                const res = await fetch(`${API}/api/objetivos/listar`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+                if (res.ok) {
+                    const objetivos = await res.json();
+                    const select = document.getElementById("crearObjetivoEstrategicoId");
+                    select.innerHTML = '<option value="">Seleccione un objetivo</option>';
+                    objetivos.forEach(obj => {
+                        const option = document.createElement("option");
+                        option.value = obj.id;
+                        option.textContent = obj.nombre; // ajusta según entidad
+                        select.appendChild(option);
+                    });
+                } else {
+                    console.error("Error cargando objetivos");
+                }
+            } catch (err) {
+                console.error("Error de conexión cargando objetivos:", err);
+            }
+        } // ***
+        // Evento para manejar el envío del formulario
+        crearProyectoForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // Recopilar datos del formulario
+            const tipo = document.getElementById('crearTipo').value;
+            const entidad = document.getElementById('crearEntidad').value;
+            const nombreProyecto = document.getElementById("crearNombreProyecto").value;
+            const presupuestoProyecto = document.getElementById("crearPresupuestoProyecto").value;
+            const descripcionProyecto = document.getElementById("crearDescripcionProyecto").value;
+            const objetivoEstrategicoId = document.getElementById("crearObjetivoEstrategicoId").value;
+
+            // Validar que los campos obligatorios no estén vacíos
+            if (!tipo || !entidad || !nombreProyecto || !presupuestoProyecto || !descripcionProyecto || !objetivoEstrategicoId) {
+                alert('Por favor, complete todos los campos obligatorios.');
+                return;
+            }
+            // Construimos el objeto según backend
+            const proyecto = {
+                tipo: tipo,
+                entidad: entidad,
+                nombre: nombreProyecto,
+                presupuesto: parseFloat(presupuestoProyecto),
+                descripcion: descripcionProyecto,
+                objetivoEstrategicoId: parseInt(objetivoEstrategicoId)
+            };
+
+            const token = localStorage.getItem('jwtToken');
+            if (!token) {
+                alert('No estás autenticado. Por favor, inicia sesión de nuevo.');
+                return;
+            }
+
+            try {
+                // Enviar los datos a la API
+                const res = await fetch(`${API}/api/proyecto/crear`, {
+                    method: 'POST',
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(proyecto)
+                });
+
+                if (res.ok) {
+                    alert('Plan creado con éxito.');
+                    crearProyectoForm.reset();
+                    bootstrap.Modal.getInstance(crearProyectoModal).hide();
+                    //  Recargar la lista de proyectos si es visible
+                    cargarProyectosIn();
+                } else {
+                    const msg = await res.text();
+                    alert(`Error al crear el proyecto: ${msg}`);
+                }
+
+            } catch (error) {
+                console.error('Error de conexión:', error);
+                alert('Error de conexión. Inténtalo de nuevo más tarde.');
+            }
+        });
+    });
+
+    // Listener para EDITAR UN PROYECTO
+    const editarProyectoModal = document.getElementById('editarProyectoModal');
+    if (editarProyectoModal) {
+        editarProyectoModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const proyectoId = button.getAttribute('data-proyecto-id');
+            cargarDatosProyecto(proyectoId);
+        });
+    } else {
+        console.error("No se encontró el modal con el ID 'editarProyectoModal'");
+    }
+
+    async function cargarDatosProyecto(proyectoId) {
+        try {
+            const token = localStorage.getItem("jwtToken");
+            const res = await fetch(`${API}/api/proyecto/${proyectoId}`,{
+                headers: { "Authorization": `Bearer ${token}`}
+            });
+            if (!res.ok){
+                alert("No se puede cargar el proyecto.");
+                return;
+            }
+            const proyecto = await res.json();
+            console.log("Datos del proyecto cargados:", proyecto)
+
+            // Asignación de campos
+            document.getElementById("editProyectoId").value = proyecto.proyectoId;
+            document.getElementById("editTipo").value = proyecto.tipo;
+            document.getElementById("editEntidad").value = proyecto.entidad;
+            document.getElementById("editNombreProyecto").value = proyecto.nombreProyecto
+            document.getElementById("editPresupuestoProyecto").value = proyecto.presupuestoProyecto;
+            document.getElementById("editDescripcionProyecto").value = proyecto.descripcionProyecto;
+            document.getElementById("editObjetivo").value = proyecto.objetivo;
+
+        } catch (error){
+            alert("Error al cargar el proyecto.");
+            console.error(error);
+        }
+    }
+    // Submit del formulario de edición
+    const editarProyectoForm = document.getElementById('editarProyectoForm');
+    if (editarProyectoForm) {
+        editarProyectoForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const proyectoId = document.getElementById("editProyectoId").value;
+            const tipo = document.getElementById("editTipo").value;
+            const entidad = document.getElementById("editEntidad").value;
+            const nombreProyecto = document.getElementById("editNombreProyecto").value;
+            const presupuestoProyecto = document.getElementById("editPresupuestoProyecto").value;
+            const descripcionProyecto = document.getElementById("editDescripcionProyecto").value;
+            const objetivo = document.getElementById("editObjetivo").value;
+
+            const token = localStorage.getItem("jwtToken");
+
+            const res = await fetch(`${API}/api/proyecto/${proyectoId}`,{
+                method: "PUT",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-type": "application/json"
+                },
+                body: JSON.stringify({
+                    proyectoId: proyectoId,
+                    tipo: tipo,
+                    Entidad: entidad,
+                    nombreProyecto: nombreProyecto,
+                    presupuesto: presupuestoProyecto,
+                    descripcionProyecto: descripcionProyecto,
+                    objetivo: objetivo
+                })
+            });
+            if (res.ok){
+                alert("Proyecto actualizado de forma correcta.");
+                const modalInstance = bootstrap.Modal.getInstance('editarProyectoModal');
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+                cargarProyectosIn();
+            } else {
+                alert("No se puede actualizar")
+            }
+        });
+    } else {
+        console.error("No se encontró el formulario")
+    }
+
+    // Listener para ELIMINAR UN PROYECTO
+    function eliminarProyectoModal(proyectoId, nombreProyecto) {
+        document.getElementById("eliminarProyectoId").value = proyectoId;
+        document.getElementById("eliminarNombreProyecto").textContent = nombreProyecto;
+        new bootstrap.Modal(document.getElementById("eliminarProyectoModal")).show();
+    }
+
+    async function confirmarEliminarProyecto() {
+        const proyectoId = document.getElementById("eliminarProyectoId").value;
+
+        try {
+            const res = await fetch(`${API}/api/proyecto/${proyectoId}`, {
+                method: "DELETE",
+                headers: {"Authorization": `Bearer ${token}`}
+            });
+
+            if (res.ok) {
+                alert("Proyecto eliminado correctamente");
+                bootstrap.Modal.getInstance(document.getElementById("eliminarModal")).hide();
+                cargarProyectos(); // Se recarga la lista
+            } else {
+                const msg = await res.text();
+                alert("Error al eliminar: " + msg);
+            }
+        } catch (err) {
+            console.error("Error al eliminar: " + err);
+            alert("Error de conexión");
+        }
+    }
+
+    // Listener para listar Planes Institucionales
+    document.getElementById('openPlanesModalBtn').addEventListener('click', () => {
+        const modal = new bootstrap.Modal(document.getElementById('planesModal'));
+        cargarPlanesEnTabla();
+        modal.show();
+    });
+
+    // Cargar planes desde la API
+    async function cargarPlanesEnTabla() {
+        const tbody = document.querySelector('#planesTable tbody');
+        if (!tbody) {
+            console.error('No se encontró el tbody');
+            return;
+        }
+        tbody.innerHTML = '';
+
+        try {
+            const token = localStorage.getItem("jwtToken");
+            const res = await fetch(`${API}/api/planes/listar`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-type": "application/json"
+                }
+            });
+
+            if (!res.ok) throw new Error("Error al cargar planes");
+            const data = await res.json();
+            const planes = Array.isArray(data) ? data : data.content || [];
+
+            if (planes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-secondary">No hay planes registrados.</td></tr>`;
+                return;
+            }
+
+            // Determinamos si el usuario es "ADMIN"
+            const userRole = localStorage.getItem('userRole');
+            const esAdmin = userRole === "ADMIN";
+            //const esAdmin = roles.includes("ADMIN") || roles.includes("ROLE_ADMIN")
+
+            // Se usa un fragmento de documento para mejorar el rendimiento
+            const fragment = document.createDocumentFragment();
+
+            if (Array.isArray(planes)) {
+                planes.forEach(plan => {
+                    const tr = document.createElement('tr');
+
+                    tr.innerHTML = `
+                        <td>${plan.idPlan}</td>
+                        <td>${plan.nombrePlan}</td>
+                        <td>${plan.usuarioId}</td>
+                        <td>${plan.vigencia}</td>
+                        <td>${plan.cronograma_inicio || plan.cronogramaInicio || '_'}</td>
+                        <td>${plan.cronograma_fin || plan.cronogramaFin || '_'}</td>
+                        <td>${plan.activo ? 'Si' : 'No'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning"
+                                data-bs-toggle="modal"
+                                data-bs-target="#editarPlanModal"
+                                data-plan-id="${plan.idPlan}"
+                                data-nombre="${plan.nombrePlan}"
+                                >Editar</button>
+                            <button type="button" class="btn btn-sm btn-danger"
+                                data-bs-toggle="modal"
+                                data-bs-target="#eliminarPlanModal"
+                                data-id-plan="${plan.idPlan}"
+                                data-nombre-plan="${plan.nombrePlan}">
+                                <i class="bi bi-trash"></i>Eliminar</button>
+                        </td>
+                    `;
+                    fragment.appendChild(tr);
+                });
+            } else {
+                console.error("Los datos de la API no son un arreglo.");
+            }
+            // Agrega todas las filas de una vez al DOM
+            tbody.appendChild(fragment);
+
+        } catch (error) {
+            console.error("Error al cargar los planes:", error);
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Error al cargar los datos</td></tr>`;
+        }
+    }
+
+    // Listener para Crear un Plan
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const crearPlanForm = document.getElementById('crearPlanForm');
+        const crearPlanModal = document.getElementById('crearPlanModal');
+        const openCrearPlanModalBtn = document.getElementById('openCrearPlanModalBtn'); // Asegúrate de que este botón exista en tu HTML
+
+        // Evento para abrir el modal de creación de plan
+        if (openCrearPlanModalBtn) {
+            openCrearPlanModalBtn.addEventListener('click', () => {
+                new bootstrap.Modal(crearPlanModal).show();
+            });
+        }
+
+        // Evento para manejar el envío del formulario
+        crearPlanForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // Recopilar datos del formulario
+            const nombrePlan = document.getElementById('crearNombrePlan').value;
+            const usuarioId = document.getElementById('crearPlanUsuarioId').value;
+            const vigencia = document.getElementById('crearPlanVigencia').value;
+            const cronogramaInicio = document.getElementById('crearPlanCronogramaInicio').value;
+            const cronogramaFin = document.getElementById('crearPlanCronogramaFin').value;
+            const activo = document.getElementById('crearPlanActivo').checked;
+
+            // Validar que los campos obligatorios no estén vacíos
+            if (!nombrePlan || !usuarioId || !vigencia || !cronogramaInicio || !cronogramaFin) {
+                alert('Por favor, complete todos los campos obligatorios.');
+                return;
+            }
+
+            const plan = {
+                nombrePlan,
+                usuarioId: parseInt(usuarioId),
+                vigencia: parseInt(vigencia),
+                cronograma_inicio: cronogramaInicio,
+                cronograma_fin: cronogramaFin,
+                activo
+            };
+
+            const token = localStorage.getItem('jwtToken');
+            if (!token) {
+                alert('No estás autenticado. Por favor, inicia sesión de nuevo.');
+                return;
+            }
+
+            try {
+                // Enviar los datos a la API
+                const res = await fetch(`${API}/api/planes/crear`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(plan)
+                });
+
+                if (res.ok) {
+                    alert('Plan creado con éxito.');
+                    crearPlanForm.reset();
+                    bootstrap.Modal.getInstance(crearPlanModal).hide();
+
+                    // Opcional: Recargar la lista de planes si es visible
+                    // cargarPlanesEnTabla();
+                } else {
+                    const msg = await res.text();
+                    alert(`Error al crear el plan: ${msg}`);
+                }
+
+            } catch (error) {
+                console.error('Error de conexión:', error);
+                alert('Error de conexión. Inténtalo de nuevo más tarde.');
+            }
+        });
+    });
+
+    // Listener para Editar un plan
+    const editarPlanModal = document.getElementById('editarPlanModal');
+    if (editarPlanModal) {
+        editarPlanModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const idPlan = button.getAttribute('data-plan-id');
+            cargarDatosPlan(idPlan);
+        });
+    } else {
+        console.error("No se encontró el modal con el ID 'editarPlanModal'");
+    }
+
+    function formatearFecha(fechaISO) {
+        return fechaISO.split("T")[0]; // Elimina la parte de la hora
+    }
+
+    async function cargarDatosPlan(idPlan) {
+        try {
+            const token = localStorage.getItem("jwtToken");
+            const res = await fetch(`${API}/api/planes/${idPlan}`,{
+                headers: { "Authorization": `Bearer ${token}`}
+            });
+            if (!res.ok){
+                alert("No se puede cargar el plan.");
+                return;
+            }
+            const plan = await res.json();
+            console.log("Datos del plan cargados:", plan)
+
+            // Asignación de campos
+            document.getElementById("editIdPlan").value = plan.idPlan;
+            document.getElementById("editNombrePlan").value = plan.nombrePlan;
+            document.getElementById("editUsuarioId").value = plan.usuarioId;
+            document.getElementById("editVigencia").value = plan.vigencia;
+            document.getElementById("editActivo").checked = !!plan.activo; // Se asigna el booleano (!! se asegura que reciba el booleano)
+
+            // formateo de fechas
+            const fechaSinHora1 = formatearFecha(plan.cronogramaInicio);
+            const fechaSinHora2 = formatearFecha(plan.cronogramaFin);
+
+            //asignación a imputs tipo date
+            if(plan.cronogramaInicio){ // verificamos que exista
+                document.getElementById("editCronogramaInicio").value = fechaSinHora1;
+            }
+            if (plan.cronograma_fin){
+                document.getElementById("editCronogramaFin").value = fechaSinHora2;
+            }
+
+            // Mostramos en algún elemento de texto
+            const fechaPlanElement = document.getElementById("fecha-plan");
+            if (fechaPlanElement) {
+                fechaPlanElement.textContent = `${fechaSinHora1} - ${fechaSinHora2}`;
+            }
+
+        } catch (error){
+            alert("Error al cargar el plan.");
+            console.error(error);
+        }
+    }
+    // Submit del formulario de edición
+    const editarPlanForm = document.getElementById('editarPlanForm');
+    if (editarPlanForm) {
+        editarPlanForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const idPlan = document.getElementById("editIdPlan").value;
+            const nombrePlan = document.getElementById("editNombrePlan").value;
+            const usuarioId = document.getElementById("editUsuarioId").value;
+            const vigencia = document.getElementById("editVigencia").value;
+            const cronogramaInicio = document.getElementById("editCronogramaInicio").value;
+            const cronogramaFin = document.getElementById("editCronogramaFin").value;
+            const activo = document.getElementById("editActivo").checked;
+
+            const token = localStorage.getItem("jwtToken");
+
+            const res = await fetch(`${API}/api/planes/${idPlan}`,{
+                method: "PUT",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-type": "application/json"
+                },
+                body: JSON.stringify({
+                    nombrePlan: nombrePlan,
+                    cronogramaInicio: cronogramaInicio,
+                    cronogramaFin: cronogramaFin,
+                    vigencia: vigencia,
+                    usuarioId: usuarioId,
+                    activo: activo
+                })
+            });
+            if (res.ok){
+                alert("Plan actualizado de forma correcta.");
+                const modalInstance = bootstrap.Modal.getInstance('editarPlanModal');
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+                cargarPlanesEnTabla();
+            } else {
+                alert("No se puede actualizar")
+            }
+        });
+    } else {
+        console.error("No se encontró el formulario")
+    }
+
+    // Listener para ELIMINAR UN PLAN
+    // Obtener el modal y los elementos que necesitas
+    const eliminarPlanModal = document.getElementById('eliminarPlanModal');
+    const nombre = document.getElementById('nombrePlanEliminar');
+    const idPlanInput = document.getElementById('idPlanEliminar');
+    const confirmarBtn = document.getElementById('confirmarPlanEliminarBtn');
+
+    // Cargar datos en el modal ('show.bs.modal')
+    document.addEventListener("DOMContentLoaded", () => {      //***
+        const eliminarModal = document.getElementById("eliminarPlanModal");
+
+        if (eliminarModal) {
+            eliminarModal.addEventListener("show.bs.modal", function (event) {
+                // Botón que disparó el modal
+                const button = event.relatedTarget;
+                // Obtiene los valores de los atributos data
+                const idPlan = button.getAttribute('data-id-plan');
+                const nombrePlan = button.getAttribute('data-nombre-plan');
+
+                // Insertamos en el modal el nombre del plan
+                const nombrePlanSpan = eliminarModal.querySelector("#nombrePlanEliminar");
+                if (nombrePlanSpan){
+                    nombrePlanSpan.textContent = nombrePlan;
+                }
+                // guardamos el id en un imput
+                const hiddenIdInput = eliminarModal.querySelector("#idPlanEliminar");
+                if (hiddenIdInput) {
+                    hiddenIdInput.value = idPlan;
+                }
+            })
+        }
+    })
+
+    // Confirmar eliminación
+    confirmarBtn.addEventListener("click", async function () { // confirmarBTN
+        // Obtiene el ID del plan
+        const idPlan = idPlanInput.value;
+        const token = localStorage.getItem("jwtToken");
+
+        if (!token) {
+            alert("No estas autenticado");
+            return
+        }
+
+        try {
+            const res = await fetch(`/api/planes/${idPlan}`, {  // ${API}
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            if (res.ok) {
+                alert("El plan se eliminó de forma correcta.");
+                bootstrap.Modal.getInstance(eliminarPlanModal).hide();
+                cargarPlanesEnTabla(); // Refresca la tabla
+            } else {
+                const msg = await res.text();
+                alert("Error al eliminar el plan:" + msg);
+            }
+            if (res.status === 409) {   //***
+                alert("No se puede eliminar el plan porque tiene metas asociadas.");
+                //return;
+            }
+        } catch (error) {
+            alert("Error de conexión:" + error.message)
+        }
+    });
+
+    // Listener para listar OBJETIVOS
+    document.getElementById('openObjetivosModalBtn').addEventListener('click', () => {
+        const modalElement = document.getElementById('objetivosModal');
+        const modal = new bootstrap.Modal(modalElement);
+        cargarObjetivos();
+        modal.show();
+    });
+
+    // Cargar objetivos desde la API
+    async function cargarObjetivos() {
+        const tbody = document.querySelector('#objetivosContainer');
+        const mensaje = document.getElementById('mensajeObjetivos');
+        tbody.innerHTML = '';
+        mensaje.textContent = 'Cargando objetivos....';
+
+        const token = localStorage.getItem("jwtToken");
+
+        if (!token || !token.includes('.') || token.split('.').length !== 3) {
+            mensaje.textContent = 'Sesión invalida. Por favor, inicia sesión nuevamente,';
+            console.warn("Token JWT inválido o malformado");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API}/api/objetivos/listar`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-type": "application/json"
+                }
+            });
+
+            if (res.status === 401) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">No autorizado</td></tr>`;
+                return;
+            }
+
+            if (!res.ok) {
+                console.error("Error al cargar objetivos: ", res.status);
+                mensaje.textContent = 'Error al cargar objetivos,';
+                return
+            }
+
+            const data = await res.json();
+            const objetivos = Array.isArray(data) ? data : data.content || [];
+
+            if (objetivos.length === 0) {
+                mensaje.textContent = 'No hay objetivos registrados.';
+                return;
+            }
+            mensaje.textContent = '';
+            renderizarObjetivos(objetivos, tbody);
+
+        } catch (error) {
+            console.error("Error al cargar objetivos:", error);
+            mensaje.textContent = 'Error al cargar los datos.';
+        }
+    }
+    function renderizarObjetivos(Objetivos, tbody) {
+        // Se usa un fragmento de documento para mejorar el rendimiento
+        const fragment = document.createDocumentFragment();
+        const userRole = localStorage.getItem('userRole');
+        const esAdmin = userRole === "ADMIN";
+
+        objetivos.forEach(objetivo => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${objetivo.idObjetivo}</td>
+                <td>${objetivo.nombreObjetivos}</td>
+                <td>${objetivo.fechaObjetivo}</td>
+                <td>${objetivo.estadoObjetivos}</td>
+                <td>${objetivo.descripcionObjetivos}</td>
+                <td>${objetivo.idPlan}</td>
+                <td>
+                    ${esAdmin ? `
+                        <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                            data-bs-target="#editarObjetivoModal"
+                            data-objetivo-id="${objetivo.idObjetivo}"
+                            data-nombre="${objetivo.nombreObjetivos}">Editar</button>
+                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                            data-bs-target="#eliminarObjetivoModal"
+                            data-id-objetivo="${objetivo.idObjetivo}"
+                            data-nombre-objetivo="${objetivo.nombreObjetivos}">
+                            <i class="bi bi-trash"></i>Eliminar</button>
+                    ` : '<span class="text-muted">Sin permisos</span>'}
+                </td>
+            `;
+            fragment.appendChild(tr);
+        });
+        tbody.appendChild(fragment);  // Agrega todas las filas de una vez al DOM
+    }
+    // Listener para crear un OBJETIVO
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const crearObjetivoForm = document.getElementById('crearObjetivoForm');
+        const crearObjetivoModal = document.getElementById('crearObjetivoModal');
+        const openCrearObjetivoModalBtn = document.getElementById('openCrearObjetivoModalBtn'); // Asegúrate de que este botón exista en tu HTML
+
+        // Evento para abrir el modal de creación de plan
+        if (openCrearObjetivoModalBtn) {
+            openCrearObjetivoModalBtn.addEventListener('click', () => {
+                //cargarObjetivos();
+                new bootstrap.Modal(crearObjetivoModal).show();
+            });
+        }
+        /*async function cargarObjetivos() { // ***
+            const token = localStorage.getItem('jwtToken');
+            try {
+                const res = await fetch(`${API}/api/objetivos/listar`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+                if (res.ok) {
+                    const objetivos = await res.json();
+                    const select = document.getElementById("crearObjetivoEstrategicoId");
+                    select.innerHTML = '<option value="">Seleccione un objetivo</option>';
+                    objetivos.forEach(obj => {
+                        const option = document.createElement("option");
+                        option.value = obj.id;
+                        option.textContent = obj.nombre; // 👈 ajusta según tu entidad
+                        select.appendChild(option);
+                    });
+                } else {
+                    console.error("Error cargando objetivos");
+                }
+            } catch (err) {
+                console.error("Error de conexión cargando objetivos:", err);
+            }
+        }*/ // ***
+        // Evento para manejar el envío del formulario
+        crearObjetivoForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // Recopilar datos del formulario
+            const nombreObjetivos = document.getElementById("crearNombreObjtivos").value;
+            const fechaObjetivo = document.getElementById('crearFechaObjetivo').value;
+            const estadoObjetivos = document.getElementById('crearEstadoObjetivos').value;
+            const descripcionObjetivos = document.getElementById("crearDescripcionObjetivos").value;
+            const idPlan = document.getElementById("crearIdPlan").value;
+
+            // Validar que los campos obligatorios no estén vacíos
+            if (!nombreObjetivos || !fechaObjetivo || !estadoObjetivos || !descripcionObjetivos || !idPlan) {
+                alert('Por favor, complete todos los campos obligatorios.');
+                return;
+            }
+            // Construimos el objeto según backend
+            const objetivo = {
+                nombre: nombreObjetivos,
+                fecha: fechaObjetivo,
+                estado: estadoObjetivos,
+                descripcion: descripcionObjetivo,
+                idPlan: parseInt(idPlan)
+            };
+
+            const token = localStorage.getItem('jwtToken');
+            if (!token) {
+                alert('No estás autenticado. Por favor, inicia sesión de nuevo.');
+                return;
+            }
+
+            try {
+                // Enviar los datos a la API
+                const res = await fetch(`${API}/api/objetivos/crear`, {
+                    method: 'POST',
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(objetivo)
+                });
+
+                if (res.ok) {
+                    alert('Objetivo creado con éxito.');
+                    crearObjetivoForm.reset();
+                    bootstrap.Modal.getInstance(crearObjetivoModal).hide();
+                    //  Recargar la lista de objetivos si es visible
+                    cargarObjetivos();
+                } else {
+                    const msg = await res.text();
+                    alert(`Error al crear el objetivo: ${msg}`);
+                }
+
+            } catch (error) {
+                console.error('Error de conexión:', error);
+                alert('Error de conexión. Inténtalo de nuevo más tarde.');
+            }
+        });
+    });
+
+    // Listener para editar un OBJETIVO
+    const editarObjetivoModal = document.getElementById('editarObjetivoModal');
+    if (editarObjetivoModal) {
+        editarObjetivoModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const idObjetivo = button.getAttribute('data-id-objetivo');
+            cargarDatosObjetivo(idObjetivo);
+        });
+    } else {
+        console.error("No se encontró el modal con el ID 'editarObjetivoModal'");
+    }
+
+    function formatearFecha(fechaISO) {
+        return fechaISO.split("T")[0]; // Elimina la parte de la hora
+    }
+
+    async function cargarDatosObjetivo(idObjetivo) {
+        try {
+            const token = localStorage.getItem("jwtToken");
+            const res = await fetch(`${API}/api/objetivos/${idObjetivo}`,{
+                headers: { "Authorization": `Bearer ${token}`}
+            });
+            if (!res.ok){
+                alert("No se puede cargar el objetivo.");
+                return;
+            }
+            const objetivo = await res.json();
+            console.log("Datos del objetivo cargados:", objetivo)
+
+            // Asignación de campos
+            document.getElementById("editIdObjetivo").value = objetivo.idObjetivo;
+            document.getElementById("editNombreObjetivos").value = objetivo.nombreObjetivos;
+            document.getElementById("editFechaObjetivo").value = objetivo.fechaObjetivo;
+            document.getElementById("editEstadoObjetivos").value = objetivo.estadoObjetivos
+            document.getElementById("editDescripcionObjetivos").value = objetivo.descripcionObjetivos;
+            document.getElementById("editIdPlan").value = objetivo.idPlan;
+
+            // formato de fecha
+            const fechaSinHora3 = formatearFecha(objetivo.fecha);
+
+            // Asignación a imput tipo date
+            if (objetivo.fecha){
+                document.getElementById("editarFechaObjetivo").value = fechaSinHora3;
+            }
+
+        } catch (error){
+            alert("Error al cargar el objetivo.");
+            console.error(error);
+        }
+    }
+    // Submit del formulario de edición
+    const editarObjetivoForm = document.getElementById('editarObjetivoForm');
+    if (editarObjetivoForm) {
+        editarObjetivoForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const idObjetivo = document.getElementById("editIdObjetivo").value;
+            const nombreObjetivos = document.getElementById("editNombreObjetivos").value;
+            const fechaObjetivo = document.getElementById("editFechaObjetivo").value;
+            const estadoObjetivos = document.getElementById("editEstadoObjetivos").value;
+            const descripcionObjetivos = document.getElementById("editDescripcionObjetivos").value;
+            const idPlan = document.getElementById("editIdPlan").value;
+
+            const token = localStorage.getItem("jwtToken");
+
+            const res = await fetch(`${API}/api/objetivos/${idObjetivos}`,{
+                method: "PUT",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-type": "application/json"
+                },
+                body: JSON.stringify({
+                    idObjetivo: idObjetivo,
+                    nombre: nombreObjetivos,
+                    fecha: fechaObjetivo,
+                    estado: estadoObjetivos,
+                    descripcion: descripcionObjetivos,
+                    idPlan: idPlan
+                })
+            });
+            if (res.ok){
+                alert("Objetivo actualizado de forma correcta.");
+                const modalInstance = bootstrap.Modal.getInstance('editarObjetivoModal');
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+                cargarObjetivo();
+            } else {
+                alert("No se puede actualizar")
+            }
+        });
+    } else {
+        console.error("No se encontró el formulario")
+    }
+
+    // Listener para eliminar un OBJETIVO
+    function eliminarObjetivoModal(idObjetivo, nombreObjetivo) {
+        document.getElementById("eliminarIdObjetivo").value = idObjetivo;
+        document.getElementById("eliminarNombreObjetivo").textContent = nombreObjetivo;
+        new bootstrap.Modal(document.getElementById("eliminarObjetivoModal")).show();
+    }
+
+    async function confirmarEliminarObjetivo() {
+        const idObjetivo = document.getElementById("eliminarIdObjetivo").value;
+
+        try {
+            const res = await fetch(`${API}/api/objetivos/${idObjetivo}`, {
+                method: "DELETE",
+                headers: {"Authorization": `Bearer ${token}`}
+            });
+
+            if (res.ok) {
+                alert("Objetivo eliminado correctamente");
+                bootstrap.Modal.getInstance(document.getElementById("eliminarModal")).hide();
+                cargarObjetivos(); // Se recarga la lista
+            } else {
+                const msg = await res.text();
+                alert("Error al eliminar: " + msg);
+            }
+        } catch (err) {
+            console.error("Error al eliminar: " + err);
+            alert("Error de conexión");
+        }
+    }
+
+
+
+    // Listener para LISTAR METAS
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const metasModal = document.getElementById('metasModal');
+        metasModal.addEventListener('shown.bs.modal', () => {
+        cargarMetas();
+        })
+        const openBtn = document.getElementById('openMetasModalBtn');
+        const metasContainer = document.getElementById("metasContainer")
+
+        // Abrir el modal
+        openBtn.onclick = () => {
+            const modal = new bootstrap.Modal(document.getElementById('metasModal'));
+            modal.show();
+            cargarMetas();
+        };
+
+        // Cargar metas desde la API
+        // import {cargarMetas} from "./js/metas";
+        async function cargarMetas() {
+            try {
+                const token = localStorage.getItem("jwtToken");
+                const res = await fetch("/api/metas/listar", {
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-type": "application/json"
+                    }
+                });
+
+                if (!res.ok) {
+                    const errorMsg = await res.text()
+                    throw new Error(`Error ${res.status}: ${errorMsg}`);
+                }
+                const data = await res.json();
+                const metas = Array.isArray(data) ? data : data.content || [];
+                //console.log("Metas recibidas: " + metas);
+                renderMetas(metas);
+            } catch (error) {
+                console.error("Erro en cargar metas:", error);
+                metasContainer.innerHTML = `<tr><td colspan="7">No se pudieron cargar las metas</td></tr>`;
+            }
+        }
+
+        // Renderizar tabla
+        function renderMetas(metas) {
+            metasContainer.innerHTML = "";
+
+            if (Array.isArray(metas)) {
+                metas.forEach(meta => {
+                    const tr = document.createElement("tr"); // meta.nombrePlan ||
+
+                    tr.innerHTML = `
+                            <td>${meta.idMeta}</td>
+                            <td>${meta.idPlan}</td>
+                            <td>${meta.nombreMeta}</td>
+                            <td>${meta.descriptionMeta}</td>
+                            <td>${meta.responsableMeta}</td>
+                            <td>${meta.estado}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="abrirMetaModalEditar(${meta.idMeta})">Editar</button>
+                                <button class="btn btn-sm btn-danger" onclick="abrirMetaModalEliminar(${meta.idMeta}, '${meta.nombreMeta}')">Eliminar</button>
+                            </td>
+                        `;
+                    metasContainer.appendChild(tr);
+                });
+            } else {
+                metasContainer.innerHTML = `<tr><td colspan="7">No hay metas registradas.</td></tr>`;
+            }
+        }
+    });
+
+    // Listener para Crear Meta
+    document.getElementById("crearMetaForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const idPlan = document.getElementById("crearIdPlan").value;
+        const nombreMeta = document.getElementById("crearNombreMeta").value;
+        const descriptionMeta= document.getElementById("crearDescriptionMeta").value;
+        const responsableMeta = document.getElementById("crearResponsableMeta").value;
+        const estado = document.getElementById("estado").value;
+
+        if (!idPlan || !nombreMeta || !estado) {
+            alert("Por favor complete los campos obligatorios");
+            return;
+        }
+
+        const meta = {idPlan: parseInt(idPlan), nombreMeta, descriptionMeta, responsableMeta, estado};
+
+        const token = localStorage.getItem("jwtToken");
+        if (!token) {
+            alert("No estas autenticado:");
+            return;
+        }
+
+        try {
+            const res = await fetch("/api/metas/crear", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`, // localStorage.getItem("jwtToken")
+                    "Content-type": "application/json"
+                },
+                body: JSON.stringify(meta)
+            });
+
+            if (res.ok) {
+                alert("Meta creada de forma correcta");
+                document.createElement("crearMetaForm").reset();
+                bootstrap.Modal.getInstance(document.getElementById("crearMetaModal")).hide();
+                cargarMetas();
+            } else {
+                const msg = await res.text();
+                alert("Error al crear meta: " + msg);
+            }
+        } catch (error) {
+            alert("Error de conexión: " + error.message)
+        }
+    });
+
+    // Listener para el formulario de edición de una meta ********
+    // Funciones para EDITAR META
+    async function abrirMetaModalEditar(idMeta) {
+        try {
+            const token = localStorage.getItem("jwtToken");
+            if(!token) throw new Error("Token no encontrado. Inicia sesión nuevamente.");
+
+            // Obtener la meta por su ID (1)
+            const res = await fetch(`${API}/api/metas/${idMeta}`, {
+                headers: {"Authorization": `Bearer ${token}`}
+            });
+
+            if (!res.ok) {
+                const msg = await  res.text();
+                throw new Error("No se pudo cargar la meta:" + msg);
+            }
+
+            const meta = await res.json();
+
+            // Cargamos planes en el <select> (2)
+            await cargarPlanes(meta.idPlan);
+
+            // Llenar el formulario con los datos de la meta (3)
+            document.getElementById("editarIdMeta").value = meta.idMeta;
+            document.getElementById("editarIdPlan").value = meta.idPlan || "";
+            document.getElementById("editarNombreMeta").value = meta.nombreMeta || "";
+            document.getElementById("editarDescriptionMeta").value = meta.descriptionMeta  || "";
+            document.getElementById("editarResponsableMeta").value = meta.responsableMeta || "";
+            document.getElementById("editarEstado").value = meta.estado || "PENDIENTE";
+
+            // Abrir el modal
+            const editarModal = new bootstrap.Modal(document.getElementById('editarMetaModal'));
+            editarModal.show();
+
+        } catch (error) {
+            console.error(error);
+            mostrarNotification("danger", error.message);
+            alert(error.message);
+        }
+    }
+
+    // SUBMIT del formulario EDITAR
+    document.getElementById("editarMetaForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const token = localStorage.getItem("jwtToken");
+        if (!token) return mostrarNotification("danger", "Token no encontrado. Inicia sesión nuevamente.");
+
+        // Construir objeto meta desde el formulario
+        const meta = {
+            idMeta: document.getElementById("editarIdMeta").value,
+            idPlan: document.getElementById("editarIdPlan").value,
+            nombreMeta: document.getElementById("editarNombreMeta").value.trim(),
+            descriptionMeta: document.getElementById("editarDescriptionMeta").value.trim(),
+            responsableMeta: document.getElementById("editarResponsableMeta").value.trim(),
+            estado: document.getElementById("editarEstado").value
+        };
+
+        try {
+            const res = await fetch(`${API}/api/metas/${idMeta}`, { // URL con el ID de la meta
+                method: "PUT", // Método PUT para actualizar
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-type": "application/json"
+                },
+                body: JSON.stringify(meta)
+            });
+
+            if (!res.ok) {
+                const msg = await res.text();
+                throw new Error(msg || "Error al actualizar la meta.");
+            }
+
+            // Éxito
+            mostrarNotification("success", "Meta actualizada correctamente.");
+            document.getElementById("editarMetaForm").reset();
+            bootstrap.Modal.getInstance(document.getElementById("editarMetaModal")).hide();
+            cargarMetas(); // refresca tabla
+
+        } catch (error) {
+            console.error(error);
+            mostrarNotification("danger", error.message);
+        }
+    });
+
+    // Cargar planes en el <select>
+    async function cargarPlanes(selectedId = "") {
+        const token = localStorage.getItem("jwtToken");
+        const select = document.getElementById("editarPlanId");
+
+        try {
+            const res = await fetch(`${API}/api/planes/listar`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            if (!res.ok) throw new Error("No se pudieron cargar los planes.");
+
+            const planes = await res.json();
+            select.innerHTML = `<option value="" disabled>Seleccione un plan...</option>`;
+
+            planes.forEach(plan => {
+                const opt = document.createElement("option");
+                opt.value = plan.id;
+                opt.textContent = plan.nombre;
+                if (plan.id === selectedId) opt.selected = true;
+                select.appendChild(opt);
+            });
+
+        } catch (error) {
+            console.error(error);
+            mostrarNotification("danger", "Error cargando planes: " + error.message);
+        }
+    }
+
+    // Función para CARGAR PROYECTOS
+    async function cargarProyectos(selectedIds = "") {
+        const token = localStorage.getItem("jwtToken");
+        const container = document.getElementById("proyectosContainer");
+        try {
+            const res = await fetch(`${API}/api/proyecto/listar`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error("No se puede cargar los proyectos.");
+            const proyectos = await res.json();
+            container.innerHTML = "";    // Limpia el contenedor
+
+            proyectos.forEach(proyecto => {
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.value = proyecto.id;
+                checkbox.classList.add("proyecto-checkbox");
+                if (selectedIds.includes(proyecto.id)) checkbox.checked = true;
+
+                const label = document.createElement("label");
+                label.textContent = proyecto.nombre;
+                label.style.marginLeft = "8px";
+
+                const wrapper = document.createElement("div");
+                wrapper.appendChild(checkbox);
+                wrapper.appendChild(label);
+
+                container.appendChild(wrapper);
+            });
+        } catch (error) {
+            console.error(error);
+            mostrarNotification("danger", "Error cargando proyectos: " + error.message);
+        }
+    }
+
+    // Fusión de notificaciones
+    function mostrarNotification(tipo, mensaje) {   // ***
+        // Busca el contenedor donde se muestra las alertas; tipo = "success", "danger", "warning"
+        const alertPlaceholder = document.getElementById('alertPlaceholder') || crearContenedorAlert();
+        // Crea el HTML de la alerta
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
+        <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+            ${mensaje}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+        alertPlaceholder.append(wrapper); // Agrega la alerta al contenedor
+    }
+
+    // Contendor flotante donde se inserta las alertas
+    function crearContenedorAlert() {
+        const container = document.createElement("div");
+        container.id = "alertPlaceholder";
+        container.style.position = "fixed";
+        container.style.top = "20px";
+        container.style.right = "20px";
+        container.style.zIndex = "1055";
+        document.body.appendChild(container);
+        return container;
+    } // ***
+
+    // Función que se llama desde el botón "ELIMINAR" de la tabla metas
+    const eliminarMetaModal = document.getElementById('eliminarMetaModal');
+    const confirmarEliminarBtn = document.getElementById('confirmarMetaEliminarBtn');
+
+    // Cargamos datos en el modal cuando se obre
+    eliminarMetaModal.addEventListener('show.bs.modal', function (event) {
+        // Botón que abrió el modal
+        const button = event.relatedTarget;
+        // Recuperamos los valores de los atributos data
+        const idMeta = button.getAttribute("data-id-meta");
+        const nombreMeta = button.getAttribute("data-nombre-meta");
+
+        // Pasamos los valores al modal
+        document.getElementById('metaEliminarId').value = idMeta;
+        document.getElementById('metaEliminarNombre').textContent = nombreMeta;
+
+        // Validamos rol de usuario
+        const userRole = localStorage.getItem("userRole");
+        if(userRole === "admin") {
+            confirmarEliminarBtn.classList.remove("d-none");
+        } else {
+            confirmarEliminarBtn.classList.add("d-none");
+        }
+    });
+
+    // Confirmar eliminación
+    async function confirmarMetaEliminarBtn() {  //abrirMetaModalEliminar
+        const metaId = document.getElementById('metaEliminarId').value;
+        // Obtenemos token de autenticación
+        const token = localStorage.getItem('jwtToken');
+
+        if (!token) {
+            alert("No estas autenticado, Inicia sesión nuevamente: ");
+            return;
+        }
+
+        try {
+            // Realizamos la petición DELETE a la API de metas.
+            const res = await fetch(`${API}/api/metas/${meta.idMeta}`, {
+                method: "DELETE",
+                headers: {"Authorization": `Bearer ${token}`}
+            });
+
+            if (res.ok) {
+                alert("La meta se elimino de forma correcta.");
+                // Ocultamos el modal
+                bootstrap.Modal.getInstance(eliminarMetaModal).hide();
+                // Recargamos la tabla o refrescamos
+                await cargarMetas();  // Refresca la tabla
+            } else {
+                const msg = await res.text();
+                alert("Error al eliminar la meta: " + msg);
+            }
+        } catch (error) {
+            alert("Error de conexión: " + error.message)
+        }
+    }
+
+    // Listener del botón (sin inline onclick en HTML)
+    confirmarEliminarBtn.addEventListener("click", confirmarMetaEliminarBtn);
+
+    /*function cerrarSesion() {
+        localStorage.removeItem("jwtToken");
+        window.location.href = "/index.html";
+    }*/
+</script>
+</body>
+</html>
