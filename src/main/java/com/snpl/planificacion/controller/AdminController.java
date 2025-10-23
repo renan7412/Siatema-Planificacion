@@ -1,4 +1,4 @@
-package com.snpl.planificacion.api;
+package com.snpl.planificacion.controller;
 
 import com.snpl.planificacion.mapper.UsuarioMapper;
 import com.snpl.planificacion.model.dto.UsuarioDTO;

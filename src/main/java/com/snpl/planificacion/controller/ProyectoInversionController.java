@@ -1,4 +1,4 @@
-package com.snpl.planificacion.api;
+package com.snpl.planificacion.controller;
 
 import com.snpl.planificacion.model.dto.ProyectoDTO;
 import com.snpl.planificacion.model.entity.ProyectoInversion;
@@ -47,8 +47,6 @@ public class ProyectoInversionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al crear el proyecto: " + e.getMessage());
         }
-        //ProyectoInversion creado = proyectoInverService.guardarDesdeDTO(proyectoDTO);
-       // return ResponseEntity.status(HttpStatus.CREATED).body(proyectoInverService.convertirADTO(creado));
     }
 
     @PutMapping("/{proyectoId}")

@@ -1,4 +1,4 @@
-package com.snpl.planificacion.api;
+package com.snpl.planificacion.controller;
 
 import com.snpl.planificacion.model.dto.MetaDTO;
 import com.snpl.planificacion.model.entity.Meta;

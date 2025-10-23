@@ -32,7 +32,7 @@ public class UsuarioService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
-    @Autowired
+    /*@Autowired
     private ModelMapper modelMapper;
 
     public UsuarioDTO covertirUsuarioDTO(Usuario usuario) {
@@ -40,7 +40,7 @@ public class UsuarioService {
     }
     public Usuario convertirADominio(UsuarioDTO dto) {
         return modelMapper.map(dto, Usuario.class);
-    }
+    }*/
 
     // Listar todos los usuarios
     public List<UsuarioDTO> listarUsuariosDTO() {

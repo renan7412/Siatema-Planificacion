@@ -15,9 +15,8 @@ public class ProyectoInversion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    @Column(nullable = false, length = 150)
-    private String nombre;
+    @Column(name = "nombre_proyecto", nullable = false, length = 150)
+    private String nombreProyecto;
 
     @Column(precision = 12, scale = 2)
     private BigDecimal presupuesto;
@@ -47,12 +46,12 @@ public class ProyectoInversion {
         this.id = id;
     }
 
-    public @NotBlank String getNombre() {
-        return nombre;
+    public String getNombreProyecto() {
+        return nombreProyecto;
     }
 
-    public void setNombre(@NotBlank String nombre) {
-        this.nombre = nombre;
+    public void setNombreProyecto(String nombreProyecto) {
+        this.nombreProyecto = nombreProyecto;
     }
 
     public BigDecimal getPresupuesto() {

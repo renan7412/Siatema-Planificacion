@@ -16,7 +16,7 @@ public class ObjetivoDTO {
     private Long idPlan;
     private String nombrePlan;
 
-    private List<Long> metaIds;
+    //private List<Long> metaIds;
     private List<Long> indicadoresIds;
 
     public Long getIdObjetivo() {
@@ -75,13 +75,7 @@ public class ObjetivoDTO {
         this.nombrePlan = nombrePlan;
     }
 
-    public List<Long> getMetaIds() {
-        return metaIds;
-    }
 
-    public void setMetaIds(List<Long> metaIds) {
-        this.metaIds = metaIds;
-    }
 
     public List<Long> getIndicadoresIds() {
         return indicadoresIds;

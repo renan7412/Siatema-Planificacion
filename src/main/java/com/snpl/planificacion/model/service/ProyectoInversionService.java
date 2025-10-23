@@ -48,7 +48,7 @@ public class ProyectoInversionService {
                 ));
 
         ProyectoInversion proyecto = new ProyectoInversion();
-        proyecto.setNombre(dto.getNombreProyecto());
+        proyecto.setNombreProyecto(dto.getNombreProyecto());
         proyecto.setDescripcion(dto.getDescripcionProyecto());
         proyecto.setPresupuesto(dto.getPresupuestoProyecto());
         proyecto.setTipo(dto.getTipo());
@@ -60,7 +60,7 @@ public class ProyectoInversionService {
 
     public ProyectoDTO crearDesdeDTO(ProyectoInversion proyecto) {
         ProyectoDTO proyectoDTO = new ProyectoDTO();
-        proyectoDTO.setNombreProyecto(proyecto.getNombre());
+        proyectoDTO.setNombreProyecto(proyecto.getNombreProyecto());
         proyectoDTO.setDescripcionProyecto(proyecto.getDescripcion());
         proyectoDTO.setPresupuestoProyecto(proyecto.getPresupuesto());
         proyectoDTO.setTipo(proyecto.getTipo());
@@ -78,7 +78,7 @@ public class ProyectoInversionService {
             existente.setObjetivoEstrategico(objetivo);
         }
 
-        existente.setNombre(proyectoDTO.getNombreProyecto());
+        existente.setNombreProyecto(proyectoDTO.getNombreProyecto());
         existente.setDescripcion(proyectoDTO.getDescripcionProyecto());
         existente.setPresupuesto(proyectoDTO.getPresupuestoProyecto());
         existente.setTipo(proyectoDTO.getTipo());
@@ -95,7 +95,7 @@ public class ProyectoInversionService {
     public ProyectoDTO convertirADTO(ProyectoInversion proyecto){
         ProyectoDTO proyectoDTO = new ProyectoDTO();
         proyectoDTO.setProyectoId(proyecto.getId());
-        proyectoDTO.setNombreProyecto(proyecto.getNombre());
+        proyectoDTO.setNombreProyecto(proyecto.getNombreProyecto());
         proyectoDTO.setDescripcionProyecto(proyecto.getDescripcion());
         proyectoDTO.setPresupuestoProyecto(proyecto.getPresupuesto());
         proyectoDTO.setTipo(proyecto.getTipo());
@@ -111,7 +111,7 @@ public class ProyectoInversionService {
     /*public ProyectoInversion convertirAEntidad(ProyectoDTO dto, ObjetivosEstrategicos objetivo) {
         ProyectoInversion proyecto = new ProyectoInversion();
         proyecto.setId(dto.getProyectoId()); // opcional si es update
-        proyecto.setNombre(dto.getNombreProyecto());
+        proyecto.setNombreProyecto(dto.getNombreProyecto());
         proyecto.setDescripcion(dto.getDescripcionProyecto());
         proyecto.setPresupuesto(dto.getPresupuestoProyecto());
         proyecto.setTipo(dto.getTipo());

@@ -1,9 +1,8 @@
-package com.snpl.planificacion.api;
+package com.snpl.planificacion.controller;
 
 import com.snpl.planificacion.model.dto.ObjetivoDTO;
 import com.snpl.planificacion.model.entity.ObjetivosEstrategicos;
 import com.snpl.planificacion.model.service.ObjetivosEstrategicosService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

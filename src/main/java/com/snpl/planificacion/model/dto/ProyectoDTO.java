@@ -1,17 +1,29 @@
 package com.snpl.planificacion.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.math.BigDecimal;
 import java.util.List;
 
 public class ProyectoDTO {
 
     private Long proyectoId;
+
+    @NotBlank
+    @JsonProperty("nombre_proyecto")
     private String nombreProyecto;
+
+    @NotBlank(message = "La descripción no debe estar vacía")
     private String descripcionProyecto;
+
+    @NotNull(message = "El presupuesto es obligatorio")
     private BigDecimal presupuestoProyecto;
+
     private String tipo;
     private String entidad;
-    private String estadoProyecto;
+    private String estadoProyecto;  // Activo, finalizado,
     private Long objetivoEstrategicoId;
     private List<Long> metaIds;
 

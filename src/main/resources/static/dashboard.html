@@ -140,7 +140,7 @@
 
 <!-- Modal para LISTAR PROYECTOS -->
 <br>
-<button id="openProyectosModalBtn" class="btn btn-primary" >Gestionar Proyectos</button>   <!-- data-bs-target="#proyectosModal" data-bs-toggle="modal" -->
+<button id="openProyectosModalBtn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#proyectosModal">Gestionar Proyectos</button>   <!-- data-bs-target="#proyectosModal" data-bs-toggle="modal" -->
 <div id="proyectosModal" class="modal fade" tabindex="-1" aria-labelledby="proyectosModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -155,7 +155,7 @@
                         <th>ID</th>
                         <th>Tipo</th>
                         <th>Entidad</th>
-                        <th>Nombre</th>
+                        <th>Nombre Proyecto</th>
                         <th>Presupuesto</th>
                         <th>Descripción</th>
                         <th>Objetivo Id</th>
@@ -189,7 +189,7 @@
                     <input type="text" class="form-control" id="crearEntidad" required/>
                 </div>
                 <div class="mb-3">
-                    <label for="crearNombreProyecto" class="form-label">Nombre del Proyecto</label>
+                    <label for="crearNombreProyecto" class="form-label">Nombre Proyecto</label>
                     <input type="text" class="form-control" id="crearNombreProyecto" required/>
                 </div>
                 <div class="mb-3">
@@ -991,7 +991,6 @@
         tbody.innerHTML = '';
         mensaje.textContent = 'Cargando proyectos....';
         // let container;
-
         const token = localStorage.getItem("jwtToken");
 
         if (!token || !token.includes('.') || token.split('.').length !== 3) {
@@ -1022,6 +1021,8 @@
             const data = await res.json();
             const proyectos = Array.isArray(data) ? data : data.content || [];
 
+            console.log("Proyectos recibidos:", proyectos);
+
             if (proyectos.length === 0) {
                 mensaje.textContent = 'No hay proyectos registrados.';
                 return;
@@ -1038,7 +1039,9 @@
         // Se usa un fragmento de documento para mejorar el rendimiento
         const fragment = document.createDocumentFragment();
         const userRole = localStorage.getItem('userRole');
-        const esAdmin = userRole === "ADMIN";
+        //const esAdmin = roles.some(r => r.toUpperCase().includes("ADMIN"));
+        //localStorage.setItem("userRole", esAdmin ? "ADMIN" : "USER");
+        const esAdmin = userRole && userRole.toUpperCase().includes("ADMIN");
 
         proyectos.forEach(proyecto => {
             const tr = document.createElement('tr');
@@ -1046,7 +1049,7 @@
                 <td>${proyecto.proyectoId}</td>
                 <td>${proyecto.tipo}</td>
                 <td>${proyecto.entidad}</td>
-                <td>${proyecto.nombreProyecto}</td>
+                <td>${proyecto.nombre_proyecto}</td>
                 <td>${proyecto.presupuestoProyecto }</td>
                 <td>${proyecto.descripcionProyecto}</td>
                 <td>${proyecto.objetivoEstrategicoId}</td>
@@ -1055,13 +1058,14 @@
                         <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
                             data-bs-target="#editarProyectoModal"
                             data-proyecto-id="${proyecto.proyectoId}"
-                            data-nombre="${proyecto.nombreProyecto}">Editar</button>
+                            data-nombre="${proyecto.nombre_proyecto}"
+                            ><i class="bi bi-pencil-square"></i>Editar</button>
                         <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
                             data-bs-target="#eliminarProyectoModal"
                             data-id-proyecto="${proyecto.proyectoId}"
-                            data-nombre-proyecto="${proyecto.nombreProyecto}">
+                            data-nombre-proyecto="${proyecto.nombre_proyecto}">
                             <i class="bi bi-trash"></i>Eliminar</button>
-                    ` : '<span class="text-muted">Sin permisos</span>'}
+                    ` : ''}
                 </td>
             `;
             fragment.appendChild(tr);
@@ -1086,7 +1090,7 @@
         async function cargarObjetivos() { // ***
             const token = localStorage.getItem('jwtToken');
             try {
-                const res = await fetch(`${API}/api/objetivos/listar`, {
+                const res = await fetch(`${API}/api/objetivo/listar`, {
                     headers: {
                         "Authorization": `Bearer ${token}`
                     }
@@ -1115,13 +1119,13 @@
             // Recopilar datos del formulario
             const tipo = document.getElementById('crearTipo').value;
             const entidad = document.getElementById('crearEntidad').value;
-            const nombreProyecto = document.getElementById("crearNombreProyecto").value;
+            const nombre_proyecto = document.getElementById("crearNombreProyecto").value;
             const presupuestoProyecto = document.getElementById("crearPresupuestoProyecto").value;
             const descripcionProyecto = document.getElementById("crearDescripcionProyecto").value;
             const objetivoEstrategicoId = document.getElementById("crearObjetivoEstrategicoId").value;
 
             // Validar que los campos obligatorios no estén vacíos
-            if (!tipo || !entidad || !nombreProyecto || !presupuestoProyecto || !descripcionProyecto || !objetivoEstrategicoId) {
+            if (!tipo || !entidad || !nombre_proyecto || !presupuestoProyecto || !descripcionProyecto || !objetivoEstrategicoId) {
                 alert('Por favor, complete todos los campos obligatorios.');
                 return;
             }
@@ -1129,9 +1133,9 @@
             const proyecto = {
                 tipo: tipo,
                 entidad: entidad,
-                nombre: nombreProyecto,
-                presupuesto: parseFloat(presupuestoProyecto),
-                descripcion: descripcionProyecto,
+                nombre_proyecto: nombre_proyecto,
+                presupuestoProyecto: parseFloat(presupuestoProyecto),
+                descripcionProyecto: descripcionProyecto,
                 objetivoEstrategicoId: parseInt(objetivoEstrategicoId)
             };
 
@@ -1153,7 +1157,7 @@
                 });
 
                 if (res.ok) {
-                    alert('Plan creado con éxito.');
+                    alert('Proyecto creado con éxito.');
                     crearProyectoForm.reset();
                     bootstrap.Modal.getInstance(crearProyectoModal).hide();
                     //  Recargar la lista de proyectos si es visible
@@ -1199,10 +1203,10 @@
             document.getElementById("editProyectoId").value = proyecto.proyectoId;
             document.getElementById("editTipo").value = proyecto.tipo;
             document.getElementById("editEntidad").value = proyecto.entidad;
-            document.getElementById("editNombreProyecto").value = proyecto.nombreProyecto
+            document.getElementById("editNombreProyecto").value = proyecto.nombre_proyecto
             document.getElementById("editPresupuestoProyecto").value = proyecto.presupuestoProyecto;
             document.getElementById("editDescripcionProyecto").value = proyecto.descripcionProyecto;
-            document.getElementById("editObjetivo").value = proyecto.objetivo;
+            document.getElementById("editObjetivoEstrategicoId").value = proyecto.objetivoEstrategicoId;
 
         } catch (error){
             alert("Error al cargar el proyecto.");
@@ -1217,10 +1221,10 @@
             const proyectoId = document.getElementById("editProyectoId").value;
             const tipo = document.getElementById("editTipo").value;
             const entidad = document.getElementById("editEntidad").value;
-            const nombreProyecto = document.getElementById("editNombreProyecto").value;
+            const nombre_proyecto = document.getElementById("editNombreProyecto").value;
             const presupuestoProyecto = document.getElementById("editPresupuestoProyecto").value;
             const descripcionProyecto = document.getElementById("editDescripcionProyecto").value;
-            const objetivo = document.getElementById("editObjetivo").value;
+            const objetivoEstrategicoId = document.getElementById("editObjetivoEstategicoId").value;
 
             const token = localStorage.getItem("jwtToken");
 
@@ -1234,10 +1238,10 @@
                     proyectoId: proyectoId,
                     tipo: tipo,
                     Entidad: entidad,
-                    nombreProyecto: nombreProyecto,
-                    presupuesto: presupuestoProyecto,
+                    nombre_proyecto: nombre_proyecto,
+                    presupuestoProyecto: presupuestoProyecto,
                     descripcionProyecto: descripcionProyecto,
-                    objetivo: objetivo
+                    objetivoEstrategicoId: objetivoEstrategicoId
                 })
             });
             if (res.ok){
@@ -1677,7 +1681,8 @@
         // Se usa un fragmento de documento para mejorar el rendimiento
         const fragment = document.createDocumentFragment();
         const userRole = localStorage.getItem('userRole');
-        const esAdmin = userRole === "ADMIN";
+        const esAdmin = userRole && userRole.toUpperCase().includes("ADMIN");
+        //const esAdmin = userRole === "ADMIN";
 
         objetivos.forEach(objetivo => {
             const tr = document.createElement('tr');

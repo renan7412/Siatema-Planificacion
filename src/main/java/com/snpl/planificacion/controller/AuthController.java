@@ -1,4 +1,4 @@
-package com.snpl.planificacion.api;
+package com.snpl.planificacion.controller;
 
 import com.snpl.planificacion.model.dto.JwtResponse;
 import com.snpl.planificacion.model.dto.LoginRequest;

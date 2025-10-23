@@ -69,13 +69,13 @@ public class ObjetivosEstrategicosService {
             objetivoDTO.setNombrePlan(objetivo.getPlanInstitucional().getNombre());
         }
 
-        if (objetivo.getMetas() != null && !objetivo.getMetas().isEmpty()){
+        /*if (objetivo.getMetas() != null && !objetivo.getMetas().isEmpty()){
             objetivoDTO.setMetaIds(
                     objetivo.getMetas().stream()
                     .map(Meta::getId)
                     .collect(Collectors.toList())
             );
-        }
+        }*/
 
         if (objetivo.getIndicadores() != null && !objetivo.getIndicadores().isEmpty()) {
             objetivoDTO.setIndicadoresIds(
